@@ -4,7 +4,7 @@ services:
   rabbitmq:
     image: rabbitmq:3.12.0-management
     restart: always
-    container_name: csms-rabbitmq
+    container_name: csms2-rabbitmq
     env_file:
       - .env
     ports:
@@ -19,7 +19,7 @@ services:
   db:
     image: postgres:15.3-bullseye
     restart: always
-    container_name: csms-db
+    container_name: csms2-db
     volumes:
       - ./data/postgres:/data
     env_file:
@@ -35,7 +35,7 @@ services:
       test: "exit 0"
 
   manager:
-    container_name: csms-manager
+    container_name: csms2-manager
     build: .
     volumes:
       - ./backend:/usr/src/csms/backend
@@ -56,7 +56,7 @@ services:
       test: "exit 0"
 
   charge_point_node:
-    container_name: charge_point_node
+    container_name: charge_point_node2
     restart: always
     build: .
     volumes:

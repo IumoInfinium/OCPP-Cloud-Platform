@@ -4,7 +4,8 @@ from typing import Callable, Union
 
 from loguru import logger
 
-from ocpp.v16.enums import Action, ChargePointStatus
+# from ocpp.v16.enums import Action, ChargePointStatus
+from ocpp.v201.enums import Action
 
 from charge_point_node.models.base import BaseEvent
 from charge_point_node.models.security_event_notification import SecurityEventNotificationEvent
@@ -42,11 +43,11 @@ def prepare_event(func) -> Callable:
             Action.StatusNotification: StatusNotificationEvent,
             Action.BootNotification: BootNotificationEvent,
             Action.Heartbeat: HeartbeatEvent,
-            Action.SecurityEventNotification: SecurityEventNotificationEvent,
+            # Action.SecurityEventNotification: SecurityEventNotificationEvent,
             Action.Authorize: AuthorizeEvent,
-            Action.StartTransaction: StartTransactionEvent,
-            Action.StopTransaction: StopTransactionEvent,
-            Action.MeterValues: MeterValuesEvent
+            # Action.StartTransaction: StartTransactionEvent,
+            # Action.StopTransaction: StopTransactionEvent,
+            # Action.MeterValues: MeterValuesEvent
         }[data["action"]](**data)
         return await func(event)
 
@@ -60,28 +61,28 @@ async def process_event(event: Union[
     StatusNotificationEvent,
     BootNotificationEvent,
     HeartbeatEvent,
-    SecurityEventNotificationEvent,
+    # SecurityEventNotificationEvent,
     AuthorizeEvent,
-    StartTransactionEvent,
-    StopTransactionEvent,
-    MeterValuesEvent
+    # StartTransactionEvent,
+    # StopTransactionEvent,
+    # MeterValuesEvent
 ]) -> BaseEvent | None:
     task = None
 
     async with get_contextual_session() as session:
 
-        if event.action is Action.MeterValues:
-            task = await process_meter_values(session, deepcopy(event))
-        if event.action is Action.StopTransaction:
-            task = await process_stop_transaction(session, deepcopy(event))
-            event.transaction_id = event.payload.transaction_id
-        if event.action is Action.StartTransaction:
-            task = await process_start_transaction(session, deepcopy(event))
-            event.transaction_id = task.transaction_id
+        # if event.action is Action.MeterValues:
+        #     task = await process_meter_values(session, deepcopy(event))
+        # if event.action is Action.StopTransaction:
+        #     task = await process_stop_transaction(session, deepcopy(event))
+        #     event.transaction_id = event.payload.transaction_id
+        # if event.action is Action.StartTransaction:
+        #     task = await process_start_transaction(session, deepcopy(event))
+        #     event.transaction_id = task.transaction_id
         if event.action is Action.Authorize:
             task = await process_authorize(session, deepcopy(event))
-        if event.action is Action.SecurityEventNotification:
-            task = await process_security_event_notification(session, deepcopy(event))
+        # if event.action is Action.SecurityEventNotification:
+        #     task = await process_security_event_notification(session, deepcopy(event))
         if event.action is Action.BootNotification:
             task = await process_boot_notification(session, deepcopy(event))
         if event.action is Action.StatusNotification:
@@ -89,9 +90,9 @@ async def process_event(event: Union[
         if event.action is Action.Heartbeat:
             task = await process_heartbeat(session, deepcopy(event))
 
-        if event.action is ConnectionStatus.LOST_CONNECTION:
-            data = ChargePointUpdateStatusView(status=ChargePointStatus.unavailable)
-            await update_charge_point(session, charge_point_id=event.charge_point_id, data=data)
+        # if event.action is ConnectionStatus.LOST_CONNECTION:
+        #     data = ChargePointUpdateStatusView(status=ChargePointStatus.unavailable)
+        #     await update_charge_point(session, charge_point_id=event.charge_point_id, data=data)
 
         if task:
             await publish(task.json(), to=task.exchange, priority=task.priority)

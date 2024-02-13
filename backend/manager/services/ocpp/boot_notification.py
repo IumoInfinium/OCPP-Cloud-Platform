@@ -6,8 +6,8 @@ from manager.models.tasks.boot_notification import BootNotificationTask
 
 
 async def process_boot_notification(
-        session,
-        event: BootNotificationEvent
+    session,
+    event: BootNotificationEvent
 ) -> BootNotificationTask:
 
     return BootNotificationTask(

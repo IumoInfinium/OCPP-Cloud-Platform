@@ -1,5 +1,3 @@
-import json
-
 from ocpp.v201.enums import Action
 from pydantic import BaseModel
 

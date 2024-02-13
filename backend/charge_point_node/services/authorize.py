@@ -1,7 +1,8 @@
 from loguru import logger
-from ocpp.v16.call_result import AuthorizePayload as CallResultAuthorizePayload
-from ocpp.v16.call import AuthorizePayload as CallAuthorizePayload
-from ocpp.v16.enums import Action
+
+from ocpp.v201.call_result import AuthorizePayload as CallResultAuthorizePayload
+from ocpp.v201.call import AuthorizePayload as CallAuthorizePayload
+from ocpp.v201.enums import Action
 
 from charge_point_node.models.authorize import AuthorizeEvent
 from charge_point_node.router import Router
@@ -12,7 +13,7 @@ router = Router()
 
 
 @router.on(Action.Authorize)
-async def on_boot_notification(
+async def request_authorize(
         message_id: str,
         charge_point_id: str,
         **kwargs
@@ -27,11 +28,12 @@ async def on_boot_notification(
         payload=CallAuthorizePayload(**kwargs)
     )
     await publish(event.json(), to=event.exchange, priority=event.priority)
-
+    
 
 @router.out(Action.Authorize)
-async def respond_authorize(task: AuthorizeTask) -> CallResultAuthorizePayload:
+async def respond_authorize(task : AuthorizeTask) -> CallResultAuthorizePayload:
     logger.info(f"Start respond authorize task={task}).")
     return CallResultAuthorizePayload(
-        id_tag_info=task.id_tag_info
+        id_token_info = task.id_token_info
     )
+
