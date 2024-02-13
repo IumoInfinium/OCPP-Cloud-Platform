@@ -13,8 +13,8 @@ from manager.models.tasks.notify_event import NotifyEventTask
 router = Router()
 
 
-@router.on(Action.Authorize)
-async def request_authorize(
+@router.on(Action.NotifyEvent)
+async def request_notify_event(
         message_id: str,
         charge_point_id: str,
         **kwargs
@@ -31,8 +31,8 @@ async def request_authorize(
     await publish(event.json(), to=event.exchange, priority=event.priority)
     
 
-@router.out(Action.Authorize)
-async def respond_authorize(task : NotifyEventTask) -> CallResultNotifyEventPayload:
-    logger.info(f"Start respond authorize task={task}).")
+@router.out(Action.NotifyEvent)
+async def respond_notify_event(task : NotifyEventTask) -> CallResultNotifyEventPayload:
+    logger.info(f"Start respond notify event task={task}).")
     return CallResultNotifyEventPayload()
 

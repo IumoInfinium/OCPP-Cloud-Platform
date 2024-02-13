@@ -2,13 +2,15 @@ from __future__ import annotations
 
 from typing import Union
 
-from ocpp.v16.enums import Action
+# from ocpp.v16.enums import Action
+from ocpp.v201.enums import Action
 from pydantic import BaseModel
 
 import manager.services.charge_points as service
 from charge_point_node.models.authorize import AuthorizeEvent
 from charge_point_node.models.boot_notification import BootNotificationEvent
 from charge_point_node.models.heartbeat import HeartbeatEvent
+from charge_point_node.models.notify_event import NotifyEventEvent
 from charge_point_node.models.meter_values import MeterValuesEvent
 from charge_point_node.models.on_connection import LostConnectionEvent
 from charge_point_node.models.security_event_notification import SecurityEventNotificationEvent
@@ -49,7 +51,8 @@ class Redactor:
             AuthorizeEvent,
             StartTransactionEvent,
             StopTransactionEvent,
-            MeterValuesEvent
+            MeterValuesEvent,
+            NotifyEventEvent,
         ],
         account_id: str
     ) -> SSEvent:
