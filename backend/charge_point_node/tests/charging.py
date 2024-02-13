@@ -29,6 +29,8 @@ from manager.services.transactions import get_transaction
 
 id_tag: str | None = None
 transaction_id: int | None = None
+heartbeat_interval = 5
+heartbeat_start = False
 
 async def test_authorize(websocket):
 
@@ -189,21 +191,6 @@ async def test_boot_notification(websocket):
         charge_point = await get_charge_point(session, charge_point_id)
         assert status == charge_point.status
 
-async def test_heartbeat(websocket):
-
-    message_id = str(uuid4())
-    await websocket.send(json.dumps([
-        2,
-        message_id,
-        Action.Heartbeat.value,
-        {}
-    ]))
-    await asyncio.sleep(1)
-    response = await websocket.recv()
-    data = json.loads(response)
-    assert data[0] == 3
-    assert data[1] == message_id
-    CallResultHeartbeatPayload(**camel_to_snake_case(data[2]))
     
 async def test_boot_notification(websocket):
     async with get_contextual_session() as session:
@@ -235,6 +222,28 @@ async def test_boot_notification(websocket):
         charge_point = await get_charge_point(session, charge_point_id)
         assert status == charge_point.status
 
+async def test_heartbeat(websocket):
+    """
+    HeartBeat Function
+    """
+    message_id = str(uuid4())
+    await websocket.send(json.dumps([
+        2,
+        message_id,
+        Action.Heartbeat,
+        {}
+    ]))
+    logger.info("HeartBeat Sent >>>")
+    await asyncio.sleep(1)
+    response = await websocket.recv()
+    data = json.loads(response)
+    
+    logger.info(f"Heartbeat Payload received -> {data}")
+    assert data[0] == 3
+    assert data[1] == message_id
+    
+    logger.info("HeartBeat Received <<<")
+    CallResultHeartbeatPayload(**camel_to_snake_case(data[2]))
 
 async def test_charging():
     account, location, charge_point = await init_data(charge_point_id)
@@ -242,6 +251,11 @@ async def test_charging():
     async with websockets.connect(url) as websocket:
         # logger.info(websocket)
         await test_authorize(websocket)
+        await asyncio.sleep(1)
+        
+        # Sends a heartbeat to CSMS, one-time
+        # add logic to resend it again on after n seconds.
+        await test_heartbeat(websocket)
         await asyncio.sleep(1)
         
         # await test_boot_notification(websocket)

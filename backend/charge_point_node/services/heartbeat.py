@@ -1,6 +1,7 @@
 from loguru import logger
-from ocpp.v16.call_result import HeartbeatPayload as CallResultHeartbeatPayload
-from ocpp.v16.enums import Action
+
+from ocpp.v201.call_result import HeartbeatPayload as CallResultHeartbeatPayload
+from ocpp.v201.enums import Action
 
 from charge_point_node.models.heartbeat import HeartbeatEvent
 from charge_point_node.router import Router
