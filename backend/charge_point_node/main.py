@@ -61,7 +61,7 @@ async def main():
         on_connect,
         '0.0.0.0',
         WS_SERVER_PORT,
-        create_protocol=OCPPWebSocketServerProtocol
+        create_protocol=OCPPWebSocketServerProtocol,
     )
     # Save a reference to the result of this function, to avoid a task disappearing mid-execution.
     # The event loop only keeps weak references to tasks.

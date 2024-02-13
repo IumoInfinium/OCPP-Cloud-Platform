@@ -18,8 +18,11 @@ from ocpp.charge_point import snake_to_camel_case, camel_to_snake_case
 
 
 from ocpp.v201.call import (
-    AuthorizePayload as CallAuthorizePayload
+    AuthorizePayload as CallAuthorizePayload,
+    BootNotificationPayload as CallBootNotificationPayload
 )
+
+
 # from ocpp.v16.call_result import (
 #     BootNotificationPayload as CallResultBootNotificationPayload,
 #     HeartbeatPayload as CallResultHeartbeatPayload,
@@ -27,8 +30,9 @@ from ocpp.v201.call import (
 #     StartTransactionPayload as CallResultStartTransactionPayload,
 #     StopTransactionPayload as CallResultStopTransactionPayload,
 # )
+
 from ocpp.v20.call_result import (
-    BootNotificationPayload as CallResultBootNotifcationPayload,
+    BootNotificationPayload as CallResultBootNotificationPayload,
     HeartbeatPayload as CallResultHeartbeatPayload,
     AuthorizePayload as CallResultAuthorizePayload,
 )
@@ -61,48 +65,48 @@ localAuthList = {}
 #             RFID = str(uuid4()).split("-")[0]
 #         logger.info(f"NOT FOUND IN LOCAL AUTH LIST")
 #         await test_authorize(websocket, account, location, charge_point, RFID)
-#     # else:
-#     #     await test_authorize(websocket, account, location, charge_point, RFID)
+    # else:
+    #     await test_authorize(websocket, account, location, charge_point, RFID)
         
 
-async def test_authorize(websocket, account, location, charge_point, RFID):
+# async def test_authorize(websocket, account, location, charge_point):
 
-    id_=RFID
+    # id_="nikhil"
 
-    authorize_payload = dataclasses.asdict(CallAuthorizePayload(
-        id_token= {
-            "idToken" : "A1B2C3D4",
-            "type" : "ISO15693"
-        }
-    ))
+    # authorize_payload = dataclasses.asdict(CallAuthorizePayload(
+    #     id_token= {
+    #         "idToken" : "A1B2C3D4",
+    #         "type" : "ISO15693"
+    #     }
+    # ))
 
-    message_id = str(uuid4())
-    temp=json.dumps([
-        2,
-        message_id,
-        Action.Authorize.value,
-        snake_to_camel_case({k: v for k, v in authorize_payload.items() if not v is None})
-    ])
-    logger.info(f"PALYLOAD====>{temp}")
-    await websocket.send(json.dumps([
-        2,
-        message_id,
-        Action.Authorize,
-        snake_to_camel_case({k: v for k, v in authorize_payload.items() if not v is None})
-    ]))
-    await asyncio.sleep(1)
-    response = await websocket.recv()
-    data = json.loads(response)
-    logger.info(f"DATA===>{data}")
-    assert data[0] == 3
-    assert data[1] == message_id
-    if data[2]["idTagInfo"]['status'] == "Accepted":
-        logger.info(f"Auth list before ==> {localAuthList}")
-        localAuthList[id_] = "Accepted"
-        logger.info(f"Auth list after ==> {localAuthList}")
+    # message_id = str(uuid4())
+    # temp=json.dumps([
+    #     2,
+    #     message_id,
+    #     Action.Authorize.value,
+    #     snake_to_camel_case({k: v for k, v in authorize_payload.items() if not v is None})
+    # ])
+    # logger.info(f"PALYLOAD====>{temp}")
+    # await websocket.send(json.dumps([
+    #     2,
+    #     message_id,
+    #     Action.Authorize,
+    #     snake_to_camel_case({k: v for k, v in authorize_payload.items() if not v is None})
+    # ]))
+    # await asyncio.sleep(1)
+    # response = await websocket.recv()
+    # data = json.loads(response)
+    # logger.info(f"DATA===>{data}")
+    # assert data[0] == 3
+    # assert data[1] == message_id
+    # if data[2]["idTagInfo"]['status'] == "Accepted":
+    #     logger.info(f"Auth list before ==> {localAuthList}")
+    #     localAuthList[id_] = "Accepted"
+    #     logger.info(f"Auth list after ==> {localAuthList}")
 
     
-    CallResultAuthorizePayload(**camel_to_snake_case(data[2]))
+    # CallResultAuthorizePayload(**camel_to_snake_case(data[2]))
 
 # async def test_start_transaction(websocket, account, location, charge_point, RFID):
 #     global transaction_id
@@ -180,61 +184,61 @@ async def test_authorize(websocket, account, location, charge_point, RFID):
 
 # async def test_stop_transaction(websocket, account, location, charge_point):
 
-#     meter_stop = 1200
-#     stop_transaction_payload = dataclasses.asdict(CallStopTransactionPayload(
-#         meter_stop=meter_stop,
-#         id_tag=id_tag,
-#         timestamp=arrow.get().isoformat(),
-#         transaction_id=transaction_id
-#     ))
+    # meter_stop = 1200
+    # stop_transaction_payload = dataclasses.asdict(CallStopTransactionPayload(
+    #     meter_stop=meter_stop,
+    #     id_tag=id_tag,
+    #     timestamp=arrow.get().isoformat(),
+    #     transaction_id=transaction_id
+    # ))
+
+    # message_id = str(uuid4())
+    
+    # temp =json.dumps([
+    #     2,
+    #     message_id,
+    #     Action.StopTransaction.value,
+    #     snake_to_camel_case({k: v for k, v in stop_transaction_payload.items() if not v is None})
+    # ])
+    # logger.info(f"STOP PALYLOAD====>{temp}")
+    # await websocket.send(json.dumps([
+    #     2,
+    #     message_id,
+    #     Action.StopTransaction.value,
+    #     snake_to_camel_case({k: v for k, v in stop_transaction_payload.items() if not v is None})
+    # ]))
+    # await asyncio.sleep(1)
+    # response = await websocket.recv()
+    # data = json.loads(response)
+    # logger.info(f"STOP RESPONSE====>{data}")
+    # assert data[0] == 3
+    # assert data[1] == message_id
+    # CallResultStopTransactionPayload(**camel_to_snake_case(data[2]))
+
+    # async with get_contextual_session() as session:
+    #     transaction = await get_transaction(session, transaction_id)
+    #     assert transaction.account_id == account.id
+    #     assert transaction.city == location.city
+    #     assert transaction.address == location.address1
+    #     assert transaction.charge_point == charge_point.id
+    #     assert transaction.meter_stop == meter_stop
+    #     assert transaction.meter_stop >= transaction.meter_start
+
+# async def test_heartbeat(websocket):
 
 #     message_id = str(uuid4())
-    
-#     temp =json.dumps([
-#         2,
-#         message_id,
-#         Action.StopTransaction.value,
-#         snake_to_camel_case({k: v for k, v in stop_transaction_payload.items() if not v is None})
-#     ])
-#     logger.info(f"STOP PALYLOAD====>{temp}")
 #     await websocket.send(json.dumps([
 #         2,
 #         message_id,
-#         Action.StopTransaction.value,
-#         snake_to_camel_case({k: v for k, v in stop_transaction_payload.items() if not v is None})
+#         Action.Heartbeat.value,
+#         {}
 #     ]))
 #     await asyncio.sleep(1)
 #     response = await websocket.recv()
 #     data = json.loads(response)
-#     logger.info(f"STOP RESPONSE====>{data}")
 #     assert data[0] == 3
 #     assert data[1] == message_id
-#     CallResultStopTransactionPayload(**camel_to_snake_case(data[2]))
-
-#     async with get_contextual_session() as session:
-#         transaction = await get_transaction(session, transaction_id)
-#         assert transaction.account_id == account.id
-#         assert transaction.city == location.city
-#         assert transaction.address == location.address1
-#         assert transaction.charge_point == charge_point.id
-#         assert transaction.meter_stop == meter_stop
-#         assert transaction.meter_stop >= transaction.meter_start
-
-async def test_heartbeat(websocket):
-
-    message_id = str(uuid4())
-    await websocket.send(json.dumps([
-        2,
-        message_id,
-        Action.Heartbeat.value,
-        {}
-    ]))
-    await asyncio.sleep(1)
-    response = await websocket.recv()
-    data = json.loads(response)
-    assert data[0] == 3
-    assert data[1] == message_id
-    CallResultHeartbeatPayload(**camel_to_snake_case(data[2]))
+#     CallResultHeartbeatPayload(**camel_to_snake_case(data[2]))
     
 async def test_boot_notification(websocket):
     async with get_contextual_session() as session:
@@ -242,11 +246,21 @@ async def test_boot_notification(websocket):
         status = charge_point.status
 
     boot_notification_payload = dataclasses.asdict(CallBootNotificationPayload(
-        charge_point_model="test_model",
-        charge_point_vendor="test_vendor",
+        reason = "PowerUp",
+        charging_station={
+            "model":"SupreCharge001",
+            "vendor_name" :"Lakebrains"
+        }
     ))
 
     message_id = str(uuid4())
+    temp = json.dumps([
+            2,
+            message_id,
+            Action.BootNotification.value,
+            snake_to_camel_case({k: v for k, v in boot_notification_payload.items() if not v is None})
+        ])
+    logger.info(f"BOOT PAYLOAD ===> {temp}")
     await websocket.send(json.dumps([
         2,
         message_id,
@@ -256,6 +270,7 @@ async def test_boot_notification(websocket):
 
     response = await websocket.recv()
     data = json.loads(response)
+    logger.info(f"BOOT RESPONSE ===> {data}")
     assert data[0] == 3
     assert data[1] == message_id
     CallResultBootNotificationPayload(**camel_to_snake_case(data[2]))
@@ -268,12 +283,12 @@ async def test_boot_notification(websocket):
 async def test_charging():
     account, location, charge_point = await init_data(charge_point_id)
 
-    async with websockets.connect(url) as websocket:
+    async with websockets.connect(ssl=0,uri=url) as websocket:
         # await local_auth(websocket, account, location, charge_point)
-        await test_authorize(websocket, account, location, charge_point)
-        await asyncio.sleep(1)
-        # await test_boot_notification(websocket)
+        # await test_authorize(websocket, account, location, charge_point)
         # await asyncio.sleep(1)
+        await test_boot_notification(websocket)
+        await asyncio.sleep(1)
         # await test_start_transaction(websocket, account, location, charge_point)
         # await asyncio.sleep(5)
         # await test_meter_values(websocket)

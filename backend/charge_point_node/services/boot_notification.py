@@ -1,7 +1,10 @@
 from loguru import logger
-from ocpp.v16.call_result import BootNotificationPayload as CallResultBootNotificationPayload
-from ocpp.v16.call import BootNotificationPayload as CallBootNotificationPayload
-from ocpp.v16.enums import Action
+from ocpp.v201.call import BootNotificationPayload as CallBootNotificationPayload
+from ocpp.v201.call_result import BootNotificationPayload as CallResultBootNotificationPayload
+from ocpp.v201.enums import Action
+# from ocpp.v16.call_result import BootNotificationPayload as CallResultBootNotificationPayload
+# from ocpp.v16.call import BootNotificationPayload as CallBootNotificationPayload
+# from ocpp.v16.enums import Action
 
 from charge_point_node.models.boot_notification import BootNotificationEvent
 from charge_point_node.router import Router

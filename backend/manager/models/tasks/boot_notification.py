@@ -1,4 +1,3 @@
-# from ocpp.v16.enums import RegistrationStatus, Action
 from ocpp.v201.enums import RegistrationStatusType, Action
 
 from manager.models.tasks.base import BaseTask
