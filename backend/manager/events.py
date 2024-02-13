@@ -4,16 +4,18 @@ from typing import Callable, Union
 
 from loguru import logger
 
-from ocpp.v16.enums import ChargePointStatus
+# from ocpp.v16.enums import ChargePointStatus
+from ocpp.v201.enums import ConnectorStatusType
 from ocpp.v201.enums import Action
 
 from charge_point_node.models.base import BaseEvent
 # from charge_point_node.models.security_event_notification import SecurityEventNotificationEvent
-# from charge_point_node.models.status_notification import StatusNotificationEvent
+from charge_point_node.models.status_notification import StatusNotificationEvent
 from charge_point_node.models.boot_notification import BootNotificationEvent
 from charge_point_node.models.heartbeat import HeartbeatEvent
 from charge_point_node.models.on_connection import LostConnectionEvent
 from charge_point_node.models.authorize import AuthorizeEvent
+from charge_point_node.models.notify_event import NotifyEventEvent
 # from charge_point_node.models.start_transaction import StartTransactionEvent
 # from charge_point_node.models.stop_transaction import StopTransactionEvent
 # from charge_point_node.models.meter_values import MeterValuesEvent
@@ -26,8 +28,9 @@ from manager.services.ocpp.heartbeat import process_heartbeat
 # from manager.services.ocpp.meter_values import process_meter_values
 # from manager.services.ocpp.security_event_notification import process_security_event_notification
 # from manager.services.ocpp.start_transaction import process_start_transaction
-# from manager.services.ocpp.status_notification import process_status_notification
+from manager.services.ocpp.status_notification import process_status_notification
 from manager.services.ocpp.authorize import process_authorize
+from manager.services.ocpp.notify_event import process_notify_event
 # from manager.services.ocpp.stop_transaction import process_stop_transaction
 from manager.views.charge_points import ChargePointUpdateStatusView
 from sse import sse_publisher
@@ -40,11 +43,12 @@ def prepare_event(func) -> Callable:
 
         event = {
             ConnectionStatus.LOST_CONNECTION: LostConnectionEvent,
-            # Action.StatusNotification: StatusNotificationEvent,
+            Action.StatusNotification: StatusNotificationEvent,
             Action.BootNotification: BootNotificationEvent,
             Action.Heartbeat: HeartbeatEvent,
             # Action.SecurityEventNotification: SecurityEventNotificationEvent,
             Action.Authorize: AuthorizeEvent,
+            Action.NotifyEvent: NotifyEventEvent,
             # Action.StartTransaction: StartTransactionEvent,
             # Action.StopTransaction: StopTransactionEvent,
             # Action.MeterValues: MeterValuesEvent
@@ -61,7 +65,8 @@ async def process_event(event: Union[
     BootNotificationEvent,
     HeartbeatEvent,
     AuthorizeEvent,
-    # StatusNotificationEvent,
+    StatusNotificationEvent,
+    NotifyEventEvent,
     # SecurityEventNotificationEvent,
     # StartTransactionEvent,
     # StopTransactionEvent,
@@ -70,7 +75,7 @@ async def process_event(event: Union[
     task = None
 
     async with get_contextual_session() as session:
-
+        logger.info(f"--->{event}")
         if event.action is Action.Authorize:
             task = await process_authorize(session, deepcopy(event))
         if event.action is Action.BootNotification:
@@ -87,11 +92,13 @@ async def process_event(event: Union[
         #     event.transaction_id = task.transaction_id
         # if event.action is Action.SecurityEventNotification:
         #     task = await process_security_event_notification(session, deepcopy(event))
-        # if event.action is Action.StatusNotification:
-        #     task = await process_status_notification(session, deepcopy(event))
+        if event.action is Action.StatusNotification:
+            task = await process_status_notification(session, deepcopy(event))
+        if event.action is Action.NotifyEvent:
+            task = await process_notify_event(session, deepcopy(event))
 
         if event.action is ConnectionStatus.LOST_CONNECTION:
-            data = ChargePointUpdateStatusView(status=ChargePointStatus.unavailable)
+            data = ChargePointUpdateStatusView(status=ConnectorStatusType.unavailable)
             await update_charge_point(session, charge_point_id=event.charge_point_id, data=data)
 
         if task:

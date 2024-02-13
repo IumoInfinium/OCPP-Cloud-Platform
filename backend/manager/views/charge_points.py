@@ -4,18 +4,21 @@ from datetime import datetime
 from typing import List, Dict
 
 from pydantic import BaseModel
-from ocpp.v16.enums import ChargePointStatus
+# from ocpp.v16.enums import ChargePointStatus
+from ocpp.v201.enums import ConnectorStatusType
 
 from manager.views import PaginationView
 from manager.views.locations import SimpleLocation
 
 
 class ConnectorView(BaseModel):
-    status: ChargePointStatus
+    # status: ChargePointStatus
+    status : ConnectorStatusType
 
 
 class ChargePointUpdateStatusView(BaseModel):
-    status: ChargePointStatus
+    # status: ChargePointStatus
+    status: ConnectorStatusType
     connectors: Dict | None = None
 
 
@@ -38,7 +41,8 @@ class CreateChargPointView(BaseModel):
 
 class SimpleChargePoint(BaseModel):
     id: str
-    status: ChargePointStatus
+    # status: ChargePointStatus
+    status: ConnectorStatusType
     model: str
     updated_at: datetime | None = None
     location: SimpleLocation

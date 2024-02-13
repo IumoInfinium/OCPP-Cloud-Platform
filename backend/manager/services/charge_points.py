@@ -16,11 +16,16 @@ from manager.views.charge_points import CreateChargPointView, ConnectorView
 
 async def update_connectors(session, event: StatusNotificationEvent) -> Dict:
     payload = event.payload
+    
+    logger.info(f"{event}")
+    logger.info(f"{event.payload}")
+    
+
     charge_point = await get_charge_point(session, event.charge_point_id)
-    if payload.connector_id == 1:
-        charge_point.connectors = {payload.connector_id: ConnectorView(status=payload.status).dict()}
-    if payload.connector_id > 1:
-        charge_point.connectors[payload.connector_id] = ConnectorView(status=payload.status).dict()
+    if event.payload.connector_id == 1:
+        charge_point.connectors = {event.payload.connector_id: ConnectorView(status=event.payload.connector_status).dict()}
+    if event.payload.connector_id > 1:
+        charge_point.connectors[payload.connector_id] = ConnectorView(status=event.payload.connector_status).dict()
     session.add(charge_point)
 
 async def build_charge_points_query(account: models.Account, search: str) -> selectable:

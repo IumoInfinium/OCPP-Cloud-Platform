@@ -12,15 +12,21 @@ from ocpp.charge_point import snake_to_camel_case, camel_to_snake_case
 from ocpp.v201.call import (
     AuthorizePayload as CallAuthorizePayload,
     BootNotificationPayload as CallBootNotificationPayload,
+    StatusNotificationPayload as CallStatusNotificationPayload,
+    NotifyEventPayload as CallNotifyEventPayload,
 )
 
 from ocpp.v20.call_result import (
     BootNotificationPayload as CallResultBootNotificationPayload,
     HeartbeatPayload as CallResultHeartbeatPayload,
     AuthorizePayload as CallResultAuthorizePayload,
+    StatusNotificationPayload as CallResultStatusNotificationPayload,
+    NotifyEventPayload as CallResultNotifyEventPayload,
 )
 
-from ocpp.v201.enums import Action
+from core.utils import get_utc_as_string
+from ocpp.v201.enums import Action, ConnectorStatusType
+from ocpp.v201 import enums as  OCPPEnums
 from manager.services.charge_points import get_charge_point
 
 from charge_point_node.tests import init_data, charge_point_id, url, clean_tables
@@ -69,6 +75,8 @@ async def test_boot_notification(websocket):
         charge_point = await get_charge_point(session, charge_point_id)
         status = charge_point.status
 
+    message_id = str(uuid4())
+    
     boot_notification_payload = dataclasses.asdict(CallBootNotificationPayload(
         reason = "PowerUp",
         charging_station={
@@ -77,13 +85,12 @@ async def test_boot_notification(websocket):
         }
     ))
 
-    message_id = str(uuid4())
     temp = json.dumps([
             2,
             message_id,
             Action.BootNotification.value,
             snake_to_camel_case({k: v for k, v in boot_notification_payload.items() if not v is None})
-        ])
+    ])
     logger.info(f"BOOT PAYLOAD ===> {temp}")
     await websocket.send(json.dumps([
         2,
@@ -98,36 +105,10 @@ async def test_boot_notification(websocket):
     assert data[0] == 3
     assert data[1] == message_id
     CallResultBootNotificationPayload(**camel_to_snake_case(data[2]))
+    
     async with get_contextual_session() as session:
         charge_point = await get_charge_point(session, charge_point_id)
         assert status == charge_point.status
-
-
-
-async def test_heartbeat(websocket):
-    """
-    HeartBeat Function
-    """
-    message_id = str(uuid4())
-    await websocket.send(json.dumps([
-        2,
-        message_id,
-        Action.Heartbeat,
-        {}
-    ]))
-    logger.info("HeartBeat Sent >>>")
-    await asyncio.sleep(1)
-    response = await websocket.recv()
-    data = json.loads(response)
-    
-    logger.info(f"Heartbeat Payload received -> {data}")
-    assert data[0] == 3
-    assert data[1] == message_id
-    
-    logger.info("HeartBeat Received <<<")
-    CallResultHeartbeatPayload(**camel_to_snake_case(data[2]))
-
-  
 
 # async def test_start_transaction(websocket, account, location, charge_point):
 #     global transaction_id
@@ -229,7 +210,126 @@ async def test_heartbeat(websocket):
 #         assert transaction.meter_stop == meter_stop
 #         assert transaction.meter_stop >= transaction.meter_start
 
+async def test_heartbeat(websocket):
+    """
+    HeartBeat Function
+    """
+    message_id = str(uuid4())
+    await websocket.send(json.dumps([
+        2,
+        message_id,
+        Action.Heartbeat,
+        {}
+    ]))
+    logger.info("HeartBeat Sent >>>")
+    await asyncio.sleep(1)
+    response = await websocket.recv()
+    data = json.loads(response)
+    
+    logger.info(f"Heartbeat Payload received -> {data}")
+    assert data[0] == 3
+    assert data[1] == message_id
+    
+    logger.info("HeartBeat Received <<<")
+    CallResultHeartbeatPayload(**camel_to_snake_case(data[2]))
 
+async def test_status_notification(websocket):
+    """
+    Send Status Notification to CSMS
+    """
+    
+    status_notification_payload = dataclasses.asdict(CallStatusNotificationPayload(
+        connector_id= 1,
+        connector_status= ConnectorStatusType.available,
+        evse_id=1,
+        timestamp=get_utc_as_string()
+    ))
+
+    message_id = str(uuid4())
+    temp=json.dumps([
+        2,
+        message_id,
+        Action.StatusNotification,
+        snake_to_camel_case({k: v for k, v in status_notification_payload.items() if not v is None})
+    ])
+    logger.info(f"PAYLOAD====>{temp}")
+    await websocket.send(json.dumps([
+        2,
+        message_id,
+        Action.StatusNotification,
+        snake_to_camel_case({k: v for k, v in status_notification_payload.items() if not v is None})
+    ]))
+    await asyncio.sleep(1)
+    response = await websocket.recv()
+    data = json.loads(response)
+    
+    logger.info(f"DATA===>{data}")
+    assert data[0] == 3
+    assert data[1] == message_id
+    CallResultStatusNotificationPayload(**camel_to_snake_case(data[2]))
+
+
+async def test_notify_event(websocket):
+    """
+    Notify event to CSMS
+    """
+    
+    event_id = 0
+    notify_event_payload = dataclasses.asdict(CallNotifyEventPayload(
+        generated_at= get_utc_as_string(),
+        seq_no=0,
+        event_data= [
+            {
+                "event_id" : event_id,
+                "timestamp": get_utc_as_string(),
+                "trigger": OCPPEnums.EventTriggerType.alerting,
+                "actualValue": "0",
+                "evenNotificationType": OCPPEnums.EventNotificationType.hard_wired_notification,
+                "component": {
+                    "name": "AirCoolingSystem",
+                },
+                "variable": {
+                    "name": "FanSpeed",
+                }
+            },
+            {
+                "eventId": event_id + 1,
+                "timestamp": get_utc_as_string(),
+                "trigger": OCPPEnums.EventTriggerType.alerting,
+                "actualValue": "F-0.1.0",
+                "evenNotificationType": OCPPEnums.EventNotificationType.hard_wired_notification,
+                "component": {
+                    "name": "AirCoolingSystem"
+                },
+                "variable": {
+                    "name": "Problem"
+                }
+            }
+        ]
+    ))
+
+    message_id = str(uuid4())
+    temp=json.dumps([
+        2,
+        message_id,
+        Action.NotifyEvent,
+        snake_to_camel_case({k: v for k, v in notify_event_payload.items() if not v is None})
+    ])
+    logger.info(f"PAYLOAD====>{temp}")
+    await websocket.send(json.dumps([
+        2,
+        message_id,
+        Action.NotifyEvent,
+        snake_to_camel_case({k: v for k, v in notify_event_payload.items() if not v is None})
+    ]))
+    await asyncio.sleep(1)
+    response = await websocket.recv()
+    data = json.loads(response)
+    
+    logger.info(f"DATA===>{data}")
+    assert data[0] == 3
+    assert data[1] == message_id
+    CallResultStatusNotificationPayload(**camel_to_snake_case(data[2]))
 
 async def test_charging():
     account, location, charge_point = await init_data(charge_point_id)
@@ -238,12 +338,26 @@ async def test_charging():
         # logger.info(websocket)
         await test_authorize(websocket)
         await asyncio.sleep(1)
+        
         await test_boot_notification(websocket)
         await asyncio.sleep(1)
+        
         # Sends a heartbeat to CSMS, one-time
         # add logic to resend it again on after n seconds.
         await test_heartbeat(websocket)
         await asyncio.sleep(1)
+        
+        # # Sends a status notification to CSMS
+        await test_status_notification(websocket)
+        await asyncio.sleep(1)
+        
+        # Sends a status notification to CSMS
+        # await test_notify_event(websocket)
+        # await asyncio.sleep(1)
+        
+
+        # await test_boot_notification(websocket)
+        # await asyncio.sleep(1)
         # await test_start_transaction(websocket, account, location, charge_point)
         # await asyncio.sleep(5)
         # await test_meter_values(websocket)

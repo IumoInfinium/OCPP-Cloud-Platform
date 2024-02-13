@@ -95,3 +95,18 @@ async def delete_charge_point(
         async with get_contextual_session() as session:
             await remove_charge_point(session, charge_point_id)
             await session.commit()
+
+# @charge_points_router.get(
+#         "/{account_id}/charge_points/{charge_point_id}")
+# async def reset_charge_point(
+#     charge_point_id: str,
+#     reset_type: str,
+#     account : Account = Depends(get_account),
+# ):
+#     async with get_contextual_session() as session:
+#         logger.info(f"RESET request starting ... Type : {reset_type}")
+#         await acquire_lock(charge_point_id)
+#         task = ResetTask(charge_point_id= charge_point_id, type=reset_type)
+        
+#         await publish(task.json(), to= task.exchange)
+    

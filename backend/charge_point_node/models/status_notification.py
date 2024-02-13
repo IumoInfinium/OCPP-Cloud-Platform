@@ -1,7 +1,7 @@
-from ocpp.v16.enums import Action
-from ocpp.v16.call import StatusNotificationPayload
+from ocpp.v201.enums import Action
+from ocpp.v201.call import StatusNotificationPayload
 
-from charge_point_node.models.base import BaseEvent
+from charge_point_node.models.base import  BaseEvent
 
 
 class StatusNotificationEvent(BaseEvent):
