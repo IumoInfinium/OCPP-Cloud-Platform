@@ -1,7 +1,7 @@
 from loguru import logger
 
-from ocpp.v201.call_result import NotifyEventPayload as CallResultNotifyEventPayload
 from ocpp.v201.call import NotifyEventPayload as CallNotifyEventPayload
+from ocpp.v201.call_result import NotifyEventPayload as CallResultNotifyEventPayload
 from ocpp.v201.enums import Action
 
 from charge_point_node.models.notify_event import NotifyEventEvent

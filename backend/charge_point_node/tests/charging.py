@@ -252,7 +252,7 @@ async def test_status_notification(websocket):
         Action.StatusNotification,
         snake_to_camel_case({k: v for k, v in status_notification_payload.items() if not v is None})
     ])
-    logger.info(f"PAYLOAD====>{temp}")
+    logger.info(f"STATUS NOTIFICATION PAYLOAD====>{temp}")
     await websocket.send(json.dumps([
         2,
         message_id,
@@ -263,9 +263,9 @@ async def test_status_notification(websocket):
     response = await websocket.recv()
     data = json.loads(response)
     
-    logger.info(f"DATA===>{data}")
     assert data[0] == 3
     assert data[1] == message_id
+    logger.info(f"STATUS NOTIFICATION DATA===>{data}")
     CallResultStatusNotificationPayload(**camel_to_snake_case(data[2]))
 
 
@@ -284,7 +284,7 @@ async def test_notify_event(websocket):
                 "timestamp": get_utc_as_string(),
                 "trigger": OCPPEnums.EventTriggerType.alerting,
                 "actualValue": "0",
-                "evenNotificationType": OCPPEnums.EventNotificationType.hard_wired_notification,
+                "event_notification_type": OCPPEnums.EventNotificationType.hard_wired_notification,
                 "component": {
                     "name": "AirCoolingSystem",
                 },
@@ -297,7 +297,7 @@ async def test_notify_event(websocket):
                 "timestamp": get_utc_as_string(),
                 "trigger": OCPPEnums.EventTriggerType.alerting,
                 "actualValue": "F-0.1.0",
-                "evenNotificationType": OCPPEnums.EventNotificationType.hard_wired_notification,
+                "event_notification_type": OCPPEnums.EventNotificationType.hard_wired_notification,
                 "component": {
                     "name": "AirCoolingSystem"
                 },
@@ -351,13 +351,10 @@ async def test_charging():
         await test_status_notification(websocket)
         await asyncio.sleep(1)
         
-        # Sends a status notification to CSMS
-        # await test_notify_event(websocket)
-        # await asyncio.sleep(1)
+        # Sends a notify event to CSMS
+        await test_notify_event(websocket)
+        await asyncio.sleep(1)
         
-
-        # await test_boot_notification(websocket)
-        # await asyncio.sleep(1)
         # await test_start_transaction(websocket, account, location, charge_point)
         # await asyncio.sleep(5)
         # await test_meter_values(websocket)

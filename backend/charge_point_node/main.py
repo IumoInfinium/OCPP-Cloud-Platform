@@ -35,7 +35,8 @@ async def watch(connection: OCPPWebSocketServerProtocol):
             continue
         try:
             await router.handle_on(connection, msg)
-        except NotSupportedError:
+        except NotSupportedError as e:
+            logger.info(f"\n{e}\n")
             logger.error("Caught error during call handling (details=%r)" % format_exc())
             continue
         except Exception as error:

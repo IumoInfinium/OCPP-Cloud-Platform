@@ -4,7 +4,8 @@ from functools import wraps
 from typing import Callable, Union
 
 from loguru import logger
-from ocpp.v16.enums import Action
+# from ocpp.v16.enums import Action
+from ocpp.v201.enums import Action
 from websockets.legacy.server import WebSocketServer
 
 from charge_point_node.router import Router
@@ -15,10 +16,10 @@ from manager.models.tasks.heartbeat import HeartbeatTask
 from manager.models.tasks.status_notification import StatusNotificationTask
 from manager.models.tasks.security_event_notification import SecurityEventNotificationTask
 from manager.models.tasks.authorize import AuthorizeTask
-from manager.models.tasks.start_transaction import StartTransactionTask
-from manager.models.tasks.stop_transaction import StopTransactionTask
+# from manager.models.tasks.start_transaction import StartTransactionTask
+# from manager.models.tasks.stop_transaction import StopTransactionTask
 from manager.models.tasks.meter_values import MeterValuesTask
-
+from manager.models.tasks.notify_event import NotifyEventTask
 router = Router()
 
 
@@ -29,11 +30,12 @@ def prepare_task(func) -> Callable:
             Action.StatusNotification: StatusNotificationTask,
             Action.BootNotification: BootNotificationTask,
             Action.Heartbeat: HeartbeatTask,
-            Action.SecurityEventNotification: SecurityEventNotificationTask,
+            # Action.SecurityEventNotification: SecurityEventNotificationTask,
             Action.Authorize: AuthorizeTask,
-            Action.StartTransaction: StartTransactionTask,
-            Action.StopTransaction: StopTransactionTask,
-            Action.MeterValues: MeterValuesTask
+            # Action.StartTransaction: StartTransactionTask,
+            # Action.StopTransaction: StopTransactionTask,
+            Action.MeterValues: MeterValuesTask,
+            Action.NotifyEvent: NotifyEventTask
         }[data["action"]](**data)
         return await func(task, *args, **kwargs)
 
@@ -46,11 +48,12 @@ async def process_task(
             StatusNotificationTask,
             BootNotificationTask,
             HeartbeatTask,
-            SecurityEventNotificationTask,
+            # SecurityEventNotificationTask,
             AuthorizeTask,
-            StartTransactionTask,
-            StopTransactionTask,
-            MeterValuesTask
+            # StartTransactionTask,
+            # StopTransactionTask,
+            MeterValuesTask,
+            NotifyEventTask
         ],
         server: WebSocketServer
 ) -> None:

@@ -32,6 +32,7 @@ class Router:
         snake_case_payload = camel_to_snake_case(msg.payload)
 
         try:
+            logger.debug(f"{handlers}")
             handler = handlers["_on_action"]
         except KeyError:
             raise NotSupportedError(
