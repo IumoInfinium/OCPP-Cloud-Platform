@@ -52,6 +52,7 @@ async def test_boot_notification(websocket):
         )
     )
 
+    logger.info(boot_notification_payload)
     message_id = str(uuid4())
     temp = json.dumps([
         2,

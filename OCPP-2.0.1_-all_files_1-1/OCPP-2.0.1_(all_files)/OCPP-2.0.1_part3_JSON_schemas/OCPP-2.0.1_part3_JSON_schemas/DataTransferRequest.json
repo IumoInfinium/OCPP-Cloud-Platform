@@ -26,7 +26,7 @@
     },
     "messageId": {
       "description": "May be used to indicate a specific message or implementation.\r\n",
-      "type": "string",
+      "type": "string", 
       "maxLength": 50
     },
     "data": {

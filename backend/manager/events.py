@@ -13,6 +13,7 @@ from charge_point_node.models.base import BaseEvent
 from charge_point_node.models.status_notification import StatusNotificationEvent
 from charge_point_node.models.boot_notification import BootNotificationEvent
 from charge_point_node.models.heartbeat import HeartbeatEvent
+from charge_point_node.models.data_transfer import DataTransferEvent
 from charge_point_node.models.on_connection import LostConnectionEvent
 from charge_point_node.models.authorize import AuthorizeEvent
 from charge_point_node.models.notify_event import NotifyEventEvent
@@ -23,6 +24,7 @@ from core.database import get_contextual_session
 from core.fields import ConnectionStatus
 from core.queue.publisher import publish
 from manager.services.ocpp.boot_notification import process_boot_notification
+from manager.services.ocpp.data_transfer import process_data_transfer
 from manager.services.charge_points import update_charge_point
 from manager.services.ocpp.heartbeat import process_heartbeat
 # from manager.services.ocpp.meter_values import process_meter_values
@@ -46,6 +48,7 @@ def prepare_event(func) -> Callable:
             Action.StatusNotification: StatusNotificationEvent,
             Action.BootNotification: BootNotificationEvent,
             Action.Heartbeat: HeartbeatEvent,
+            Action.DataTransfer:DataTransferEvent,
             # Action.SecurityEventNotification: SecurityEventNotificationEvent,
             Action.Authorize: AuthorizeEvent,
             Action.NotifyEvent: NotifyEventEvent,
@@ -67,6 +70,7 @@ async def process_event(event: Union[
     AuthorizeEvent,
     StatusNotificationEvent,
     NotifyEventEvent,
+    DataTransferEvent,
     # SecurityEventNotificationEvent,
     # StartTransactionEvent,
     # StopTransactionEvent,
@@ -75,13 +79,15 @@ async def process_event(event: Union[
     task = None
 
     async with get_contextual_session() as session:
-        logger.info(f"--->{event}")
+        logger.info(f"EVENT ---------->{event}<----------")
         if event.action is Action.Authorize:
             task = await process_authorize(session, deepcopy(event))
         if event.action is Action.BootNotification:
             task = await process_boot_notification(session, deepcopy(event))
         if event.action is Action.Heartbeat:
             task = await process_heartbeat(session, deepcopy(event))
+        if event.action is Action.DataTransfer:
+            task = await process_data_transfer(session, deepcopy(event))
         # if event.action is Action.MeterValues:
         #     task = await process_meter_values(session, deepcopy(event))
         # if event.action is Action.StopTransaction:

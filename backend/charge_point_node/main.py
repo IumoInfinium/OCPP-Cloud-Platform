@@ -23,11 +23,13 @@ async def watch(connection: OCPPWebSocketServerProtocol):
     while True:
 
         try:
+            logger.info('****** INSIDE WATCH ******')
             raw_msg = await connection.recv()
         except Exception:
             break
 
         try:
+            logger.info('****** INSIDE WATCH ******')
             msg = unpack(raw_msg)
         except (FormatViolationError, ProtocolError, PropertyConstraintViolationError) as exc:
             logger.error("Could not parse message (message=%r, details=%r)" % (raw_msg, format_exc()))

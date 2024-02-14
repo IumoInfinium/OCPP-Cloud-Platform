@@ -4,13 +4,13 @@ from functools import wraps
 from typing import Callable, Union
 
 from loguru import logger
-# from ocpp.v16.enums import Action
 from ocpp.v201.enums import Action
 from websockets.legacy.server import WebSocketServer
 
 from charge_point_node.router import Router
 from core.fields import ConnectionStatus
 from core.queue.publisher import publish
+from manager.models.tasks.data_transfer import DataTransferTask
 from manager.models.tasks.boot_notification import BootNotificationTask
 from manager.models.tasks.heartbeat import HeartbeatTask
 from manager.models.tasks.status_notification import StatusNotificationTask
@@ -35,7 +35,11 @@ def prepare_task(func) -> Callable:
             # Action.StartTransaction: StartTransactionTask,
             # Action.StopTransaction: StopTransactionTask,
             Action.MeterValues: MeterValuesTask,
-            Action.NotifyEvent: NotifyEventTask
+            Action.NotifyEvent: NotifyEventTask,
+            # Action.StartTransaction: StartTransactionTask,
+            # Action.StopTransaction: StopTransactionTask,
+            Action.MeterValues: MeterValuesTask,
+            Action.DataTransfer: DataTransferTask
         }[data["action"]](**data)
         return await func(task, *args, **kwargs)
 
@@ -53,7 +57,11 @@ async def process_task(
             # StartTransactionTask,
             # StopTransactionTask,
             MeterValuesTask,
-            NotifyEventTask
+            NotifyEventTask,
+            # StartTransactionTask,
+            # StopTransactionTask,
+            MeterValuesTask,
+            DataTransferTask
         ],
         server: WebSocketServer
 ) -> None:

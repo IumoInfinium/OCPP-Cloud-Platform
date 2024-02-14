@@ -15,5 +15,6 @@ from charge_point_node.services import (
     status_notification,
     stop_transaction,
     unlock_connector,
-    notify_event
+    notify_event,
+    data_transfer,
 )

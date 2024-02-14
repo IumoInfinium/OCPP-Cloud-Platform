@@ -26,3 +26,6 @@ env
 
 **/__pycache__
 **/*.pyc
+
+# envirnonment file
+env

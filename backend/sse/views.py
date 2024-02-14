@@ -10,6 +10,7 @@ import manager.services.charge_points as service
 from charge_point_node.models.authorize import AuthorizeEvent
 from charge_point_node.models.boot_notification import BootNotificationEvent
 from charge_point_node.models.heartbeat import HeartbeatEvent
+from charge_point_node.models.data_transfer import DataTransferEvent
 from charge_point_node.models.notify_event import NotifyEventEvent
 from charge_point_node.models.meter_values import MeterValuesEvent
 from charge_point_node.models.on_connection import LostConnectionEvent
@@ -53,6 +54,7 @@ class Redactor:
             StopTransactionEvent,
             MeterValuesEvent,
             NotifyEventEvent,
+            DataTransferEvent
         ],
         account_id: str
     ) -> SSEvent:
