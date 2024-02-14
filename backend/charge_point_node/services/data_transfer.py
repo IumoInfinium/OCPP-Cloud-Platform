@@ -1,7 +1,9 @@
 from loguru import logger
 
-from ocpp.v201.call_result import DataTransferPayload as CallResultDataTransferPayload
+from ocpp.v201.call import DataTransferPayload as CallDataTransferPayload
 from ocpp.v201.enums import Action
+
+from ocpp.v201.call_result import DataTransferPayload as CallResultDataTransferPayload
 
 from charge_point_node.models.data_transfer import DataTransferEvent
 from charge_point_node.router import Router
@@ -24,8 +26,10 @@ async def on_data_transfer(
     event = DataTransferEvent(
         charge_point_id=charge_point_id,
         message_id=message_id,
-        **kwargs
+        payload=CallDataTransferPayload(**kwargs)
+        
     )
+    logger.info(f";;;;;;;;;;;;;;;;;;;;;;;;;;{event};;;;;;;;;;;;;;;;;;;;;")
     await publish(event.json(), to=event.exchange, priority=event.priority)
 
 
