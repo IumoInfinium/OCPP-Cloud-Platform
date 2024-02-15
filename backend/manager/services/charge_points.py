@@ -91,3 +91,5 @@ async def get_statuses_counts(session, account_id: str) -> Dict:
     data = result.fetchall()
     await asyncio.sleep(1)
     return {item.status.lower(): item.count for item in data}
+
+

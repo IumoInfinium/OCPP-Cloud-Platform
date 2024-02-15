@@ -17,6 +17,7 @@ from charge_point_node.models.data_transfer import DataTransferEvent
 from charge_point_node.models.on_connection import LostConnectionEvent
 from charge_point_node.models.authorize import AuthorizeEvent
 from charge_point_node.models.notify_event import NotifyEventEvent
+from charge_point_node.models.transaction_event import TransactionEventEvent
 # from charge_point_node.models.start_transaction import StartTransactionEvent
 # from charge_point_node.models.stop_transaction import StopTransactionEvent
 # from charge_point_node.models.meter_values import MeterValuesEvent
@@ -33,6 +34,7 @@ from manager.services.ocpp.heartbeat import process_heartbeat
 from manager.services.ocpp.status_notification import process_status_notification
 from manager.services.ocpp.authorize import process_authorize
 from manager.services.ocpp.notify_event import process_notify_event
+from manager.services.ocpp.transaction_event import process_transaction_event
 # from manager.services.ocpp.stop_transaction import process_stop_transaction
 from manager.views.charge_points import ChargePointUpdateStatusView
 from sse import sse_publisher
@@ -55,6 +57,7 @@ def prepare_event(func) -> Callable:
             # Action.StartTransaction: StartTransactionEvent,
             # Action.StopTransaction: StopTransactionEvent,
             # Action.MeterValues: MeterValuesEvent
+            Action.TransactionEvent: TransactionEventEvent,
         }[data["action"]](**data)
         return await func(event)
 
@@ -102,6 +105,8 @@ async def process_event(event: Union[
             task = await process_status_notification(session, deepcopy(event))
         if event.action is Action.NotifyEvent:
             task = await process_notify_event(session, deepcopy(event))
+        if event.action is Action.TransactionEvent:
+            task = await process_transaction_event(session, deepcopy(event))
 
         if event.action is ConnectionStatus.LOST_CONNECTION:
             data = ChargePointUpdateStatusView(status=ConnectorStatusType.unavailable)

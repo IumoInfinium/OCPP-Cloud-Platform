@@ -18,6 +18,7 @@ from charge_point_node.models.security_event_notification import SecurityEventNo
 from charge_point_node.models.start_transaction import StartTransactionEvent
 from charge_point_node.models.status_notification import StatusNotificationEvent
 from charge_point_node.models.stop_transaction import StopTransactionEvent
+from charge_point_node.models.transaction_event import TransactionEventEvent
 from core.database import get_contextual_session
 from core.fields import ConnectionStatus
 from manager.services.transactions import get_transaction
@@ -54,7 +55,8 @@ class Redactor:
             StopTransactionEvent,
             MeterValuesEvent,
             NotifyEventEvent,
-            DataTransferEvent
+            DataTransferEvent,
+            TransactionEventEvent
         ],
         account_id: str
     ) -> SSEvent:
@@ -71,6 +73,11 @@ class Redactor:
         if event.action in [Action.StopTransaction, Action.StartTransaction]:
             async with get_contextual_session() as session:
                 transaction = await get_transaction(session, event.transaction_id)
+                data.meta = Transaction.from_orm(transaction).dict()
+        
+        if event.action in [Action.TransactionEvent]:
+            async with get_contextual_session() as session:
+                transaction = await get_transaction(session, event.payload.transaction_id)
                 data.meta = Transaction.from_orm(transaction).dict()
 
         return SSEvent(data=data)

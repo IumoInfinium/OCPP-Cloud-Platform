@@ -408,30 +408,39 @@ async def test_start_transaction(websocket) -> CallResultTransactionPayload:
     Transaction Event
     """
     result = None
+    message_id = str(uuid4())
+    transaction_id = str(uuid4())
+    evse_id = 1
+    connector_id = 1
     try:
-        message_sequence_number = 0
+        message_sequence_number = 1
         transaction_event_payload = dataclasses.asdict(CallTransactionPayload(
             event_type= OCPPEnums.TransactionEventType.started,
-            timestamp= get_utc_as_string(),
             trigger_reason=OCPPEnums.TriggerReasonType.authorized,
+            timestamp= get_utc_as_string(),
             seq_no= message_sequence_number,
             transaction_info= {
-                "transaction_id" : "291-A-1",
-                "evse" : {
-                    "id" : 1,
-                    "connector_id" : 1,
-                }
-            }
+                "transaction_id" : transaction_id,
+            },
+            evse =  {
+                "id" : evse_id,
+                "connector_id" : connector_id,
+            },
+            id_token= {
+                "id_token" : "A1B2C3D4",
+                "type": "ISO15693"
+            },
         ))
 
-        message_id = str(uuid4())
+        
         temp=json.dumps([
             2,
             message_id,
             Action.TransactionEvent,
             snake_to_camel_case({k: v for k, v in transaction_event_payload.items() if not v is None})
         ])
-        logger.info(f"PAYLOAD====>{temp}")
+        
+        logger.info(f"START TRANSACTION PAYLOAD ====>>>>>{temp}")
         await websocket.send(json.dumps([
             2,
             message_id,
@@ -442,17 +451,18 @@ async def test_start_transaction(websocket) -> CallResultTransactionPayload:
         response = await websocket.recv()
         data = json.loads(response)
         
-        logger.info(f"DATA===>{data}")
+        logger.info(f"START TRANSACTION DATA <<<<===={data}")
         assert data[0] == 3
         assert data[1] == message_id
         result = CallResultTransactionPayload(**camel_to_snake_case(data[2]))
     except Exception as e:
-        logger.error(f"ERROR ==> {e}")
+        logger.error(f"***** ERROR ***** {e}")
+        logger.info(f"{e}")
     return result
 
 async def test_transaction_update(websocket) -> CallResultTransactionPayload:
     """
-    Transaction Event
+    Transaction Event updated
     """
     result = None
     try:
@@ -555,28 +565,28 @@ async def test_charging():
 
     async with websockets.connect(url) as websocket:
         # logger.info(websocket)
-        await test_boot_notification(websocket)
-        await asyncio.sleep(1)
+        # await test_boot_notification(websocket)
+        # await asyncio.sleep(1)
 
-        await test_authorize(websocket)
-        await asyncio.sleep(1)
+        # await test_authorize(websocket)
+        # await asyncio.sleep(1)
         
-        # Sends a heartbeat to CSMS, one-time
-        # add logic to resend it again on after n seconds.
-        await test_heartbeat(websocket)
-        await asyncio.sleep(1)
+        # # Sends a heartbeat to CSMS, one-time
+        # # add logic to resend it again on after n seconds.
+        # await test_heartbeat(websocket)
+        # await asyncio.sleep(1)
         
-        # # Sends a status notification to CSMS
-        await test_status_notification(websocket)
-        await asyncio.sleep(1)
+        # # # Sends a status notification to CSMS
+        # await test_status_notification(websocket)
+        # await asyncio.sleep(1)
         
-        # Sends a notify event to CSMS
-        await test_notify_event(websocket)
-        await asyncio.sleep(1)
+        # # Sends a notify event to CSMS
+        # await test_notify_event(websocket)
+        # await asyncio.sleep(1)
         
-        # Data Transfer from CS to CSMS
-        await test_data_transfer(websocket)
-        await asyncio.sleep(1)
+        # # Data Transfer from CS to CSMS
+        # await test_data_transfer(websocket)
+        # await asyncio.sleep(1)
 
         # start transaction CS 
         await test_start_transaction(websocket)

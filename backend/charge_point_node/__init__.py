@@ -17,4 +17,5 @@ from charge_point_node.services import (
     unlock_connector,
     notify_event,
     data_transfer,
+    transaction_event,
 )
