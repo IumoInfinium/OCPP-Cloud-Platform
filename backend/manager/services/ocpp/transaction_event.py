@@ -36,12 +36,16 @@ async def process_transaction_event(session, event: TransactionEventEvent) -> Tr
         return TransactionEventTask(
             message_id = event.message_id,
             charge_point_id= event.charge_point_id,
+            # charging_priority = 0, # ranges from -9 ... 9
+            # id_token_info= id_token_info
         )
     else:
         # transaction event endee
         return TransactionEventTask(
             message_id = event.message_id,
             charge_point_id= event.charge_point_id,
+            # charging_priority = 0, # ranges from -9 ... 9
+            # id_token_info= id_token_info
         )
     
     
