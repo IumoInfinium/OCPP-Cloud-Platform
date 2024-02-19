@@ -20,7 +20,7 @@ async def create_transaction(
 
 async def update_transaction(
         session: AsyncSession,
-        transaction_id: int,
+        transaction_id: str,
         data: UpdateTransactionView
 ) -> None:
     await session.execute(

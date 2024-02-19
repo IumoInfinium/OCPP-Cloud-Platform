@@ -17,6 +17,7 @@ from ocpp.v201.call import (
     NotifyEventPayload as CallNotifyEventPayload,
     DataTransferPayload as CallDataTransferPayload,
     TransactionEventPayload as CallTransactionPayload,
+    MeterValuesPayload as CallMeterValuesPayload,
 )
 
 from ocpp.v201.call_result import (
@@ -27,6 +28,7 @@ from ocpp.v201.call_result import (
     NotifyEventPayload as CallResultNotifyEventPayload,
     DataTransferPayload as CallResultDataTransferPayload,
     TransactionEventPayload as CallResultTransactionPayload,
+    MeterValuesPayload as CallResultMeterValuesPayload
 )
 
 from core.utils import get_utc_as_string
@@ -404,13 +406,18 @@ async def test_notify_event(websocket):
     assert data[1] == message_id
     CallResultNotifyEventPayload(**camel_to_snake_case(data[2]))
 
-async def test_start_transaction(websocket) -> CallResultTransactionPayload:
+async def test_start_transaction(websocket, curr_transaction_id) -> CallResultTransactionPayload:
     """
     Transaction Event
     """
     result = None
     message_id = str(uuid4())
-    transaction_id = str(uuid4())
+    
+    if curr_transaction_id != "":
+        transaction_id = curr_transaction_id
+    else:
+        transaction_id = str(uuid4())
+    
     evse_id = 1
     connector_id = 1
     try:
@@ -461,19 +468,24 @@ async def test_start_transaction(websocket) -> CallResultTransactionPayload:
         logger.info(f"{e}")
     return result
 
-async def test_transaction_update(websocket) -> CallResultTransactionPayload:
+async def test_transaction_update(websocket, curr_transaction_id) -> CallResultTransactionPayload:
     """
     Transaction Event updated
     """
     result = None
     message_id = str(uuid4())
-    transaction_id = str(uuid4())
+    
+    if curr_transaction_id != "":
+        transaction_id = curr_transaction_id
+    else:
+        transaction_id = str(uuid4())
+        
     evse_id = 1
     connector_id = 1
     try:
         message_sequence_number = 1
         transaction_event_payload = dataclasses.asdict(CallTransactionPayload(
-            event_type= OCPPEnums.TransactionEventType.started,
+            event_type= OCPPEnums.TransactionEventType.updated,
             trigger_reason=OCPPEnums.TriggerReasonType.cable_plugged_in,
             timestamp= get_utc_as_string(),
             seq_no= message_sequence_number,
@@ -533,19 +545,23 @@ async def test_transaction_update(websocket) -> CallResultTransactionPayload:
         logger.error(f"ERROR ==> {e}")
     return result
 
-async def test_transaction_end(websocket) -> CallResultTransactionPayload:
+async def test_transaction_end(websocket, curr_transaction_id: str = "") -> CallResultTransactionPayload:
     """
     Transaction Event ended
     """
     result = None
     message_id = str(uuid4())
-    transaction_id = str(uuid4())
+    
+    if curr_transaction_id != "":
+        transaction_id = curr_transaction_id
+    else:
+        transaction_id = str(uuid4())
     evse_id = 1
     connector_id = 1
     try:
         message_sequence_number = 1
         transaction_event_payload = dataclasses.asdict(CallTransactionPayload(
-            event_type= OCPPEnums.TransactionEventType.started,
+            event_type= OCPPEnums.TransactionEventType.ended,
             trigger_reason=OCPPEnums.TriggerReasonType.deauthorized,
             timestamp= get_utc_as_string(),
             seq_no= message_sequence_number,
@@ -565,12 +581,12 @@ async def test_transaction_end(websocket) -> CallResultTransactionPayload:
             meter_value= [
                 {
                     "timestamp" : get_utc_as_string(),
-                    "sampledValue":  [
+                    "sampled_value":  [
                         {
                             "value": 2005.281,
                             "context": "Sample.Periodic",
                             "measurand": "Energy.Active.Import.Register",
-                            "unitOfMeasure": {
+                            "unit_of_measure": {
                                 "unit": "Wh" 
                             }
                         } 
@@ -607,6 +623,67 @@ async def test_transaction_end(websocket) -> CallResultTransactionPayload:
     return result
 
 
+async def test_meter_values(websocket, curr_transaction_id: str = "") -> CallResultMeterValuesPayload:
+    """
+    Meter Values
+    """
+    result = None
+    message_id = str(uuid4())
+    
+    # if curr_transaction_id != "":
+    #     transaction_id = curr_transaction_id
+    # else:
+    #     transaction_id = str(uuid4())
+    evse_id = 1
+    connector_id = 1
+    try:
+        message_sequence_number = 1
+        meter_values_payload = dataclasses.asdict(CallMeterValuesPayload(
+            evse_id = 1,
+            meter_value= [
+                {
+                    "timestamp": get_utc_as_string(),
+                    "sampled_value":[
+                        {
+                            "value" : 49.98,
+                            "context": OCPPEnums.ReadingContextType.sample_periodic, # "Sample.Periodic",
+                            "measurand": OCPPEnums.MeasurandType.frequency, #"Frequency",
+                            "unit_of_measure": {
+                                "unit" : OCPPEnums.UnitOfMeasureType.hz, #"Hz",
+                            }
+                        }
+                    ]
+                },
+            ]
+        ))
+    
+        message_id = str(uuid4())
+        temp=json.dumps([
+            2,
+            message_id,
+            Action.MeterValues,
+            snake_to_camel_case({k: v for k, v in meter_values_payload.items() if not v is None})
+        ])
+        logger.info(f"METER VALUES START PAYLOAD ====>{temp}")
+        await websocket.send(json.dumps([
+            2,
+            message_id,
+            Action.MeterValues,
+            snake_to_camel_case({k: v for k, v in meter_values_payload.items() if not v is None})
+        ]))
+        await asyncio.sleep(1)
+        response = await websocket.recv()
+        data = json.loads(response)
+        
+        logger.info(f"METER VALUES END RESPONSE DATA===>{data}")
+        assert data[0] == 3
+        assert data[1] == message_id
+        result = CallResultMeterValuesPayload(**camel_to_snake_case(data[2]))
+    except Exception as e:
+        logger.error(f"ERROR ==> {e}")
+    return result
+
+
 async def test_transaction(websocket):
     # do all the transaction scenario here
     
@@ -626,9 +703,11 @@ async def test_transaction(websocket):
         logger.error("CANNOT AUTHORIZE IN TRANSACTION")
         logger.info(f"With ERROR => {e}")
         return 
-
+    
+    # charging station creates a tranasction id 
+    curr_transaction_id = str(uuid4())
     try:
-        start_transaction_result = await test_start_transaction(websocket)
+        start_transaction_result = await test_start_transaction(websocket, curr_transaction_id)
     except Exception as e:
         logger.error("CANNOT START TRANSACTION")
         logger.info(f"With error => {e}")
@@ -641,9 +720,9 @@ async def test_transaction(websocket):
         logger.info(f"With ERROR => {e}")
         return
     
-    for i in range(0,10):
+    for i in range(0,2):
         try:
-            transaction_event_update_result = await test_transaction_update(websocket)
+            transaction_event_update_result = await test_transaction_update(websocket, curr_transaction_id)
             logger.info("CHARGING ...")
             await asyncio.sleep(2)
         except Exception as e:
@@ -663,7 +742,7 @@ async def test_transaction(websocket):
 
         
     try:
-        transaction_event_end_result = await test_transaction_end(websocket)
+        transaction_event_end_result = await test_transaction_end(websocket, curr_transaction_id)
         logger.info("****COMPLETED ****")
     except Exception as e:
         logger.error("CANNOT SEND TRANSACTION EVENT UPATE REQ to CSMS")
@@ -676,6 +755,8 @@ async def test_transaction(websocket):
 async def test_charging():
     account, location, charge_point = await init_data(charge_point_id)
 
+    # await clean_tables(account, location, charge_point)
+    
     async with websockets.connect(url) as websocket:
         # logger.info(websocket)
         # await test_boot_notification(websocket)
@@ -706,24 +787,30 @@ async def test_charging():
         # await asyncio.sleep(1)
         
 
-        # # start transaction CS 
+        # # update transaction 
         # await test_transaction_update(websocket)
         # await asyncio.sleep(1)
         
-        # # start transaction CS 
+        # optional, if transaction event does not send meter values
+        # test sending meter values to CSMS
+        # await test_meter_values(websocket)
+        # await asyncio.sleep(1)
+        
+        # # end transaction
         # await test_transaction_end(websocket)
         # await asyncio.sleep(1)
         
-        # test charging trnsaction
-        await test_transaction(websocket)
-        await asyncio.sleep(5)
-        # await test_meter_values(websocket)
-        # await asyncio.sleep(1)
+        # # Overall - test charging trnsaction
+        # await test_transaction(websocket)
+        # await asyncio.sleep(5)
+        
         # await test_stop_transaction(websocket, account, location, charge_point)
         # await asyncio.sleep(5)
+        pass
 
 
-    await clean_tables(account, location, charge_point)
+    # asyncio.sleep(20)
+    # await clean_tables(account, location, charge_point)
 
     print("\n\n --- SUCCESS ---")
 
