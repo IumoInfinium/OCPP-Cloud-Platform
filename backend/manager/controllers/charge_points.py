@@ -17,7 +17,8 @@ from manager.services.charge_points import (
 )
 from manager.utils import acquire_lock, params_extractor, paginate
 from manager.views.charge_points import StatusCount, PaginatedChargePointsView, CreateChargPointView
-
+from ocpp.v201.enums import GenericDeviceModelStatusType
+from ocpp.v201.enums import ReportBaseType
 
 charge_points_router = APIRouter(
     tags=["charge_points"]
@@ -127,8 +128,7 @@ async def get_variable():
     }
 
 # from manager.models.tasks.configuring_charging_station import BaseReport
-from ocpp.v201.enums import GenericDeviceModelStatusType
-from ocpp.v201.enums import ReportBaseType
+
 @charge_points_router.post(
     "/{account_id}/chage_points/{charge_point_id}/baseReport",
     status_code=status.HTTP_200_OK
@@ -136,6 +136,18 @@ from ocpp.v201.enums import ReportBaseType
 async def get_base_report(requestId: int, data:ReportBaseType):
     id = requestId
     return {"status":GenericDeviceModelStatusType.accepted,"ID":id,"report":data}
+
+
+# from manager.models.tasks.configuring_charging_station import BaseReport
+from ocpp.v201.enums import ResetType,ResetStatusType
+from typing import Optional
+# from ocpp.v201.enums import ReportBaseType
+@charge_points_router.post(
+    "/{account_id}/chage_points/{charge_point_id}/reset",
+    status_code=status.HTTP_200_OK
+)
+async def reset(data:ResetType, evseId: Optional[int]=None):
+    return {"status":ResetStatusType.accepted,"statusInfo":{"type":data,"evseId":evseId}}
 
 
 

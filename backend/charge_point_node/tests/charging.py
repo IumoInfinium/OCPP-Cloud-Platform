@@ -762,7 +762,7 @@ async def test_charging():
         # await test_boot_notification(websocket)
         # await asyncio.sleep(1)
 
-        # await test_authorize(websocket)
+        await test_authorize(websocket)
         # await asyncio.sleep(1)
         
         # # Sends a heartbeat to CSMS, one-time
@@ -799,14 +799,14 @@ async def test_charging():
         # # end transaction
         # await test_transaction_end(websocket)
         # await asyncio.sleep(1)
-        
+
         # # Overall - test charging trnsaction
         # await test_transaction(websocket)
         # await asyncio.sleep(5)
         
         # await test_stop_transaction(websocket, account, location, charge_point)
         # await asyncio.sleep(5)
-        pass
+        # pass
 
 
     # asyncio.sleep(20)
