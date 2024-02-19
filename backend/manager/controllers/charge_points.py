@@ -7,7 +7,9 @@ from loguru import logger
 from core.database import get_contextual_session
 from core.queue.publisher import publish
 from manager.models import AuthData, Account, ChargePoint
+from ocpp.v201.datatypes import SetVariableDataType,GetVariableDataType
 from manager.models.tasks.connections import DisconnectTask
+# from manager.models.tasks.configuring_charging_station import SetVariableData 
 from manager.services.accounts import get_account
 from manager.services.charge_points import (
     get_charge_point,
@@ -15,6 +17,8 @@ from manager.services.charge_points import (
 )
 from manager.utils import acquire_lock, params_extractor, paginate
 from manager.views.charge_points import StatusCount, PaginatedChargePointsView, CreateChargPointView
+from ocpp.v201.enums import GenericDeviceModelStatusType
+from ocpp.v201.enums import ReportBaseType
 
 charge_points_router = APIRouter(
     tags=["charge_points"]
@@ -95,6 +99,58 @@ async def delete_charge_point(
         async with get_contextual_session() as session:
             await remove_charge_point(session, charge_point_id)
             await session.commit()
+            
+
+
+@charge_points_router.post(
+    "/{account_id}/chage_points/{charge_point_id}/variable",
+    status_code=status.HTTP_200_OK,
+    response_model=None
+)
+async def set_variable(data:SetVariableDataType):
+    attribute_value = data.attribute_value
+    component = data.component.name
+    varibale_type = data.variable.name 
+    return {"attribute_value":attribute_value,
+            "component":component,
+            "varibale":varibale_type
+    }
+
+
+@charge_points_router.get(
+    "/{account_id}/chage_points/{charge_point_id}/variables",
+    status_code=status.HTTP_200_OK
+)
+async def get_variable():
+    return {"attribute_value":"string",
+            "component":"Fan",
+            "varibale":"RPM"
+    }
+
+# from manager.models.tasks.configuring_charging_station import BaseReport
+
+@charge_points_router.post(
+    "/{account_id}/chage_points/{charge_point_id}/baseReport",
+    status_code=status.HTTP_200_OK
+)
+async def get_base_report(requestId: int, data:ReportBaseType):
+    id = requestId
+    return {"status":GenericDeviceModelStatusType.accepted,"ID":id,"report":data}
+
+
+# from manager.models.tasks.configuring_charging_station import BaseReport
+from ocpp.v201.enums import ResetType,ResetStatusType
+from typing import Optional
+# from ocpp.v201.enums import ReportBaseType
+@charge_points_router.post(
+    "/{account_id}/chage_points/{charge_point_id}/reset",
+    status_code=status.HTTP_200_OK
+)
+async def reset(data:ResetType, evseId: Optional[int]=None):
+    return {"status":ResetStatusType.accepted,"statusInfo":{"type":data,"evseId":evseId}}
+
+
+
 
 # @charge_points_router.get(
 #         "/{account_id}/charge_points/{charge_point_id}")

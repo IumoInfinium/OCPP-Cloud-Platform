@@ -1,7 +1,8 @@
 from loguru import logger
-from ocpp.v16.call import MeterValuesPayload as CallMeterValuesPayload
-from ocpp.v16.call_result import MeterValuesPayload as CallResultMeterValuesPayload
-from ocpp.v16.enums import Action
+
+from ocpp.v201.call import MeterValuesPayload as CallMeterValuesPayload
+from ocpp.v201.call_result import MeterValuesPayload as CallResultMeterValuesPayload
+from ocpp.v201.enums import Action
 
 from manager.models.tasks.meter_values import MeterValuesTask
 from charge_point_node.models.meter_values import MeterValuesEvent

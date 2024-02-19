@@ -3,6 +3,7 @@ from manager.services.transactions import update_transaction
 from manager.views.transactions import UpdateTransactionView
 from charge_point_node.models.stop_transaction import StopTransactionEvent
 
+
 async def process_stop_transaction(
         session,
         event: StopTransactionEvent

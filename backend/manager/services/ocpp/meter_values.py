@@ -7,8 +7,10 @@ async def process_meter_values(
         event: MeterValuesEvent
 ) -> MeterValuesTask:
 
-    payload = event.payload
-
+    # payload = event.payload
+    """
+    Logic here
+    """
     return MeterValuesTask(
         message_id=event.message_id,
         charge_point_id=event.charge_point_id
